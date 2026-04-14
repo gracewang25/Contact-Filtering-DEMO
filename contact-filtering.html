@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Contact Management - Duplicate Detection</title>
+	<link rel="stylesheet" href="css/contact-filtering.css">
+</head>
+<body>
+	<div id="errorBanner" class="error-banner" hidden></div>
+	<main class="container">
+		<header class="page-header">
+			<h1>Contact Management</h1>
+			<p class="subtitle">Upload your contact list to identify duplicates and new contacts</p>
+		</header>
+
+		<div id="demoBanner" class="demo-banner" hidden>
+			<span class="demo-badge">DEMO MODE</span>
+			<span>Contacts and write operations are simulated — no real QuickBase data is read or written.</span>
+		</div>
+
+		<div id="contactStatus" class="status-message"></div>
+
+		<section class="upload-section">
+			<div class="upload-card">
+				<label for="fileInput" class="file-label">
+					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+						<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+					</svg>
+					Select Excel File
+				</label>
+				<input id="fileInput" type="file" accept=".xlsx,.xls,.csv" />
+				<p class="file-hint">Only accept Excel files with Name, Email Address, and Affiliation Name columns (header names are supported).</p>
+				<button id="processBtn" class="btn-primary" disabled>Process File</button>
+				<button id="loadDemoBtn" class="btn-secondary" hidden>Load Demo Upload</button>
+			</div>
+		</section>
+
+		<div id="results" class="results-container" style="display:none;">
+			<div class="stats-bar">
+				<div class="stat-item stat-clickable" data-scroll-to="duplicates-section">
+					<span class="stat-label">Duplicates</span>
+					<span class="stat-value" id="duplicateCount">0</span>
+				</div>
+				<div class="stat-item stat-clickable" data-scroll-to="new-contacts-section">
+					<span class="stat-label">New Contacts</span>
+					<span class="stat-value" id="newContactCount">0</span>
+				</div>
+				<div class="stat-item">
+					<span class="stat-label">Total Processed</span>
+					<span class="stat-value" id="totalCount">0</span>
+				</div>
+			</div>
+
+			<div class="section-header">
+				<div>
+					<h2>Export Results</h2>
+					<p class="section-description">Download duplicate and new contact rows as an Excel file.</p>
+				</div>
+				<button id="exportResultsBtn" class="btn-secondary">Export Duplicates + New Contacts</button>
+			</div>
+
+			<section id="interaction-tools" class="section interaction-tools">
+				<div class="section-header">
+					<div>
+						<h2>Interaction Manager</h2>
+						<p class="section-description">Create and manage interactions linked to uploaded contacts</p>
+					</div>
+				</div>
+				<div class="interaction-panel">
+					<div class="interaction-fields">
+						<div class="form-group">
+							<label for="interactionShowName">Show Name</label>
+							<input id="interactionShowName" type="text" placeholder="Enter show name" />
+							<p class="form-note">Source and Source Date apply to all interactions created from this upload.</p>
+						</div>
+						<div class="form-group">
+							<label for="uploadSourceDate">Source Date (Upload-Level)</label>
+							<input id="uploadSourceDate" type="date" />
+							<p class="form-note">Pick one Interaction Date for all interactions created from this upload.</p>
+						</div>
+						<div class="form-group">
+							<label for="bulkInteractionType">Interaction Type</label>
+							<select id="bulkInteractionType">
+								<option value="In-Person Meeting" selected>In-Person Meeting</option>
+								<option value="Online Meeting">Online Meeting</option>
+								<option value="Phone">Phone</option>
+								<option value="Email">Email</option>
+								<option value="Text Message">Text Message</option>
+								<option value="Scientist.com Messaging">Scientist.com Messaging</option>
+								<option value="Virtual Meeting">Virtual Meeting</option>
+								<option value="Internal Preparation Session">Internal Preparation Session</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label for="interactionSource">Interaction Source</label>
+							<select id="interactionSource">
+								<option value="" selected>Show Name (set above)</option>
+								<option value="Event">Event</option>
+								<option value="Website">Website</option>
+								<option value="Referral">Referral</option>
+								<option value="Cold Call">Cold Call</option>
+								<option value="previous collaborator">previous collaborator</option>
+								<option value="Startup at MBI">Startup at MBI</option>
+								<option value="PEGS 2025">PEGS 2025</option>
+								<option value="AAI 2025">AAI 2025</option>
+								<option value="Discovery on Target Boston 2025">Discovery on Target Boston 2025</option>
+								<option value="Discovery on Target 2025 Boston">Discovery on Target 2025 Boston</option>
+							</select>
+						</div>
+					</div>
+					<div class="interaction-actions">
+						<button id="addInteractionAllBtn" class="btn-bulk">Add Interaction To All Uploaded</button>
+						<button id="removeInteractionAllBtn" class="btn-secondary">Remove All Interactions</button>
+						<button id="viewInteractionAllBtn" class="btn-secondary">View Existing Interactions</button>
+		
+					</div>
+					<div id="interactionStatus" class="status-inline"></div>
+				</div>
+				<div id="interactionOverview" class="interaction-overview" style="display:none;"></div>
+			</section>
+
+			<!-- Duplicates Section -->
+			<section id="duplicates-section" class="section duplicates-section">
+				<div class="section-header">
+					<div>
+						<h2>Potential Duplicates</h2>
+						<p class="section-description">These contacts appear to already exist in QuickBase</p>
+					</div>
+					<button id="updateAllBtn" class="btn-bulk" style="display:none;">Update All</button>
+				</div>
+				<div id="duplicatesList" class="contact-list"></div>
+			</section>
+
+			<!-- New Contacts Section -->
+			<section id="new-contacts-section" class="section new-contacts-section">
+				<div class="section-header">
+					<div>
+						<h2>New Contacts</h2>
+						<p class="section-description">These contacts don't match any existing records</p>
+					</div>
+					<button id="addAllBtn" class="btn-bulk" style="display:none;">Add All</button>
+				</div>
+				<div id="newContactsList" class="contact-list"></div>
+			</section>
+		</div>
+	</main>
+
+	<section id="interactionModal" class="modal-shell" hidden>
+		<div id="interactionModalOverlay" class="modal-overlay"></div>
+		<div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="interactionModalTitle">
+			<div class="modal-header">
+				<h3 id="interactionModalTitle">Add Interaction</h3>
+				<button id="interactionModalCloseBtn" class="btn-secondary modal-close-btn" type="button">Close</button>
+			</div>
+			<p id="interactionModalContext" class="modal-context"></p>
+			<form id="interactionForm" class="modal-form">
+				<div class="form-group">
+					<label for="interactionFieldShowName">Show Name</label>
+					<input id="interactionFieldShowName" type="text" placeholder="Enter show name" />
+					<p class="form-note">Interaction Date comes from the upload-level Source Date field above.</p>
+				</div>
+				<div class="form-group">
+					<label for="interactionFieldContactId">Related Contact</label>
+					<input id="interactionFieldContactId" type="text" placeholder="Contact name" readonly />
+				</div>
+				<div class="form-group">
+					<label for="interactionFieldType">Interaction Type</label>
+					<select id="interactionFieldType" required>
+						<option value="In-Person Meeting" selected>In-Person Meeting</option>
+						<option value="Online Meeting">Online Meeting</option>
+						<option value="Phone">Phone</option>
+						<option value="Email">Email</option>
+						<option value="Text Message">Text Message</option>
+						<option value="Scientist.com Messaging">Scientist.com Messaging</option>
+						<option value="Virtual Meeting">Virtual Meeting</option>
+						<option value="Internal Preparation Session">Internal Preparation Session</option>
+					</select>
+				</div>
+				<div class="form-group">
+					<label for="interactionFieldSource">Interaction Source</label>
+					<select id="interactionFieldSource" required>
+						<option value="" selected>Show Name (set above)</option>
+						<option value="Event">Event</option>
+						<option value="Website">Website</option>
+						<option value="Referral">Referral</option>
+						<option value="Cold Call">Cold Call</option>
+						<option value="previous collaborator">previous collaborator</option>
+						<option value="Startup at MBI">Startup at MBI</option>
+						<option value="PEGS 2025">PEGS 2025</option>
+						<option value="AAI 2025">AAI 2025</option>
+						<option value="Discovery on Target Boston 2025">Discovery on Target Boston 2025</option>
+						<option value="Discovery on Target 2025 Boston">Discovery on Target 2025 Boston</option>
+					</select>
+				</div>
+				<div class="modal-actions">
+					<button id="interactionModalCancelBtn" class="btn-secondary" type="button">Cancel</button>
+					<button id="interactionModalSubmitBtn" class="btn-bulk" type="submit">Create Interaction</button>
+				</div>
+			</form>
+		</div>
+	</section>
+
+	<!-- SheetJS (XLSX) and Fuse.js via CDN -->
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js"></script>
+	<script src="js/contact-filtering.utils.js"></script>
+	<script src="js/contact-filtering.data.js"></script>
+	<script src="js/contact-filter.demo.js"></script>
+	<script src="js/contact-filtering.js"></script>
+</body>
+</html>
