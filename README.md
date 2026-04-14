@@ -71,5 +71,3 @@ Just open `contact-filtering.html` in a browser.
 - Richer conflict-resolution UX for ambiguous matches
 
 ---
-
-I like building software that's practical and easy to reason about. Simple where possible, explicit where it matters, and readable for whoever picks it up next.
