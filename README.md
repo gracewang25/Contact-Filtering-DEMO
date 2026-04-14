@@ -1,8 +1,8 @@
 # Contact Filtering
 
-A small, focused web app meant to take a messy uploaded spreadsheet of contacts and quickly figure out what's probably a duplicate vs. what should be added as new. Then adding contacts into our CRM with bulk workflows and inline create/update actions.
+A small, focused web app meant to take a messy uploaded spreadsheet of contacts and quickly figure out what's probably a duplicate vs. what should be added as new. After matching, users are able to add contacts into the CRM with bulk workflows and inline create/update actions.
 
-Originally built around QuickBase workflows, then cleaned up for sharing — demo-safe config, no real IDs or tokens, and a built-in sample dataset so the full UI still works.
+Originally built around QuickBase workflows, then cleaned up for sharing and demo-safe config. No real IDs or tokens, and a built-in sample dataset so the full UI still works.
 
 ---
 
@@ -27,7 +27,7 @@ contact-filtering/
 
 - Parses an uploaded spreadsheet of contacts
 - Matches rows against an existing contact set loaded from QuickBase
-- Flags likely duplicates and genuinely new contacts
+- Flags likely duplicates and new contacts
 - Row-level and bulk actions: update existing, create new, add interactions
 - Interaction management linked to contacts (with a modal form)
 - Exports results to Excel
@@ -42,13 +42,13 @@ Duplicate detection is intentionally hybrid so it's both precise and forgiving:
 2. Exact name + affiliation match
 3. Fuzzy fallback (Fuse.js) with a configurable confidence threshold
 
-Exact rules catch the clean cases; fuzzy catches the messy ones (typos, name variations, etc.).
+Exact rules catch the clean cases and fuzzy catches the messy ones (typos, name variations, etc.).
 
 ---
 
 ## Demo mode
 
-The app ships with demo mode on so you can open it in a browser and try the full UI immediately — no QuickBase connection needed.
+The app ships with demo mode on so you can open it in a browser and try the full UI immediately. Keep in mind some features were not safely recreated for demo (view and edit existing interactions, etc)
 
 **To try it:**
 1. Open `contact-filtering.html` in a browser
@@ -57,9 +57,7 @@ The app ships with demo mode on so you can open it in a browser and try the full
 
 ## How to run
 
-This is a plain static front-end app — no build step, no server required.
-
-Just open `contact-filtering.html` in a browser.
+This is a plain static front-end app. Just open `contact-filtering.html` in a browser.
 
 ---
 
